@@ -1,26 +1,76 @@
-# Multilingual Patient Triage Pilot
+# SafeTriage-AI
 
-Research project:
-Towards Safe Multilingual Patient Triage: An Explainable and Uncertainty-Aware AI Framework for English, Urdu, and Roman Urdu
+### Towards Safe Multilingual Patient Triage: An Explainable and Uncertainty-Aware AI Framework for English, Urdu, Roman Urdu, and Code-Mixed Text
 
-## Important
-Triagegeist is a fully synthetic emergency-department dataset. Do not describe it as real Pakistani patient data. The Kaggle license permits academic research/education but prohibits redistribution outside Kaggle without permission.
+SafeTriage-AI is an academic research prototype for exploring multilingual AI-assisted patient triage across English, Urdu, Roman Urdu, and code-mixed clinical text.
+
+The framework combines:
+
+- Multilingual text classification
+- Explainable AI (XAI)
+- Confidence-based uncertainty estimation
+- Human-review deferral
+- A Streamlit research prototype
+
+> **Important:** SafeTriage-AI is a research prototype and is not a diagnostic, treatment, or clinically validated system. It is designed for academic experimentation and decision-support research only.
+
+---
+
+## Research Objective
+
+The project investigates whether language variation affects AI-based triage classification and whether explainability and uncertainty estimation can help identify cases that may require human review.
+
+### Research Questions
+
+1. How does language variation across English, Urdu, Roman Urdu, and code-mixed patient messages affect AI-based triage performance?
+2. Can explainable AI identify textual factors associated with multilingual triage predictions?
+3. Can uncertainty estimation identify cases that should be deferred for human review?
+
+---
+
+## System Overview
+
+The SafeTriage-AI workflow is:
+
+Patient Message  
+↓  
+Language Detection  
+↓  
+XLM-R Based Triage Classification  
+↓  
+Triage Level 1–5  
+↓  
+Confidence Estimation  
+↓  
+Explainability Analysis  
+↓  
+Human Review if Confidence is Below Threshold
+
+The system is intended as an experimental decision-support framework rather than an autonomous clinical decision-maker.
+
+---
 
 ## Dataset
-Download the Triagegeist files from Kaggle after accepting its rules. Put:
-- train.csv
-- chief_complaints.csv
-inside `data/raw/`
 
-This project starts with a 50-case pilot. It does NOT invent experimental results.
+The main benchmark used in this project is **Triagegeist**, a fully synthetic emergency-department triage dataset.
 
-## Pilot workflow
-1. Load and join the English complaint text with triage labels.
-2. Select a reproducible 50-case pilot.
-3. Create a translation template for Urdu, Roman Urdu and code-mixed variants.
-4. Train a simple TF-IDF + Logistic Regression baseline on English text.
-5. Evaluate with accuracy and macro-F1.
-6. Later add XLM-R, SHAP, calibration and selective prediction.
+The dataset contains structured emergency-department information and free-text chief complaints with triage acuity labels.
 
-## Safety
-This is an academic decision-support experiment, not a diagnostic or treatment system.
+### Important Dataset Note
+
+Triagegeist is **synthetic data** and must not be described as real Pakistani patient data.
+
+The multilingual evaluation in this project uses English chief complaints together with manually prepared Urdu, Roman Urdu, and code-mixed variants for research experimentation.
+
+The project does not claim to represent naturally occurring Pakistani clinical language data.
+
+### Dataset Setup
+
+The original dataset is obtained separately from Kaggle.
+
+Place the required files inside:
+
+```text
+data/raw/
+├── train.csv
+└── chief_complaints.csv
