@@ -1,0 +1,51 @@
+patient_id,chief_complaint_raw,triage_acuity,urdu_text,roman_urdu_text,code_mixed_text,translation_status
+TG-0AS6DZZSQ,"nasal congestion and runny nose, onset today",4,,,,PENDING_HUMAN_REVIEW
+TG-14GUYCDVZ,spreading wound infection，worsening over hours,3,,,,PENDING_HUMAN_REVIEW
+TG-1QAFRVDK2,electrolyte imbalance symptomatic with vomiting,3,,,,PENDING_HUMAN_REVIEW
+TG-3S98W1OUM,blood glucose monitoring，worsening over hours,4,,,,PENDING_HUMAN_REVIEW
+TG-3WQV1D99R,ear pain,4,,,,PENDING_HUMAN_REVIEW
+TG-4Q1APSM99,"ruptured aortic aneurysm presenting as flank pain, worsening with movement",1,,,,PENDING_HUMAN_REVIEW
+TG-6F8RN1DAI,blood pressure check in known patient,4,,,,PENDING_HUMAN_REVIEW
+TG-74C8ZUIIP,"moderate epistaxis, for 2 days",3,,,,PENDING_HUMAN_REVIEW
+TG-8959RUCS4,"weight change concern, onset today",4,,,,PENDING_HUMAN_REVIEW
+TG-8AO08GNXE,massive transfusion requirement,1,,,,PENDING_HUMAN_REVIEW
+TG-9DQV9OUMT,"sleep hygiene advice, for 2 days",5,,,,PENDING_HUMAN_REVIEW
+TG-APKNQ4A9H,suture removal request with vomiting,5,,,,PENDING_HUMAN_REVIEW
+TG-BISA33T1C,contact lens problem,4,,,,PENDING_HUMAN_REVIEW
+TG-CEV9HVYP4,"thunderclap headache, for 2 days",2,,,,PENDING_HUMAN_REVIEW
+TG-DA30D3YTK,distal radius fracture，worsening over hours,3,,,,PENDING_HUMAN_REVIEW
+TG-DAIUDM22L,"moderate asthma exacerbation, since yesterday",3,,,,PENDING_HUMAN_REVIEW
+TG-DQEW09AYZ,runny nose mild with vomiting,5,,,,PENDING_HUMAN_REVIEW
+TG-FQS9Z7C6T,"acute severe psychosis, for 2 days",2,,,,PENDING_HUMAN_REVIEW
+TG-FWIRSA6Y7,contraception advice with associated nausea,5,,,,PENDING_HUMAN_REVIEW
+TG-GM41HC7X4,mild urinary symptoms with fever,5,,,,PENDING_HUMAN_REVIEW
+TG-GW7EFAI91,hypothermia moderate with vomiting,2,,,,PENDING_HUMAN_REVIEW
+TG-HESVA978I,"alcohol withdrawal mild, constant",4,,,,PENDING_HUMAN_REVIEW
+TG-HFWVUGASQ,"decompensated heart failure, since yesterday",2,,,,PENDING_HUMAN_REVIEW
+TG-HZGZ6YMFN,"erythema migrans tick bite, since yesterday",3,,,,PENDING_HUMAN_REVIEW
+TG-IOTF6YKD2,moderate facial trauma with rigors,3,,,,PENDING_HUMAN_REVIEW
+TG-IYA3Z8XGL,knee injury unable to weight bear with vomiting,3,,,,PENDING_HUMAN_REVIEW
+TG-JCINMCSF1,"panic attack now resolved, onset today",4,,,,PENDING_HUMAN_REVIEW
+TG-JDFJELC20,"ECG result inquiry, onset today",5,,,,PENDING_HUMAN_REVIEW
+TG-JQAZ0K61A,foreign body sensation in known patient,3,,,,PENDING_HUMAN_REVIEW
+TG-K7MXHR9XI,"bullous pemphigoid acute, onset today",2,,,,PENDING_HUMAN_REVIEW
+TG-KTZR6DFLZ,upper respiratory tract infection,4,,,,PENDING_HUMAN_REVIEW
+TG-KY9K66Q7P,shoulder pain chronic flare in known patient,4,,,,PENDING_HUMAN_REVIEW
+TG-L0A0QKE4I,"allergic rash moderate, intermittent",3,,,,PENDING_HUMAN_REVIEW
+TG-L3USUEJBQ,deep dog bite wound with vomiting,3,,,,PENDING_HUMAN_REVIEW
+TG-LM39T8PPQ,splinter removal,5,,,,PENDING_HUMAN_REVIEW
+TG-LNUUIBGWU,respiratory failure with hypoxia with associated nausea,2,,,,PENDING_HUMAN_REVIEW
+TG-LWIVUWVG9,thyroid-related symptoms,3,,,,PENDING_HUMAN_REVIEW
+TG-MWL1U829T,"STI with systemic features, since yesterday",3,,,,PENDING_HUMAN_REVIEW
+TG-NCSV35G5L,erythema migrans tick bite with rigors,3,,,,PENDING_HUMAN_REVIEW
+TG-PH1W0GYIC,suspected rib fracture,3,,,,PENDING_HUMAN_REVIEW
+TG-R9X1FS6WD,"severe self-harm, onset today",2,,,,PENDING_HUMAN_REVIEW
+TG-SJGCWH0P3,"overdose unknown substance, no prior history of this",2,,,,PENDING_HUMAN_REVIEW
+TG-T4ZC87AJO,moderate asthma exacerbation with fever,3,,,,PENDING_HUMAN_REVIEW
+TG-THS2KHAHC,suspected rib fracture with fever,3,,,,PENDING_HUMAN_REVIEW
+TG-VKR80F3B9,chronic anxiety flare,4,,,,PENDING_HUMAN_REVIEW
+TG-X6AO43718,"mild low back pain, no prior history of this",4,,,,PENDING_HUMAN_REVIEW
+TG-XMKPHD180,acute angle closure glaucoma in known patient,2,,,,PENDING_HUMAN_REVIEW
+TG-XNM3XCK3J,constipation five days with vomiting,4,,,,PENDING_HUMAN_REVIEW
+TG-XZN04UIFI,"nausea and vomiting without blood, onset today",4,,,,PENDING_HUMAN_REVIEW
+TG-Z4HHXPC94,"allergic rash moderate, for 2 days",3,,,,PENDING_HUMAN_REVIEW

@@ -1,0 +1,5 @@
+Language,Records,Accuracy,Macro-F1,Mean Confidence
+English,50,0.36,0.1059,0.2603
+Urdu,48,0.375,0.1091,0.2601
+Roman Urdu,48,0.375,0.1091,0.2606
+Code-Mixed,48,0.375,0.1091,0.2607

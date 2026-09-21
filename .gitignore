@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Large model/checkpoint files
+models/xlmr_pilot/
+models/xlmr_full/checkpoint-800/
+models/xlmr_deploy/
+
+# Raw datasets
+data/raw/*.csv
+
+# Backup files
+app_backup_*.py
+
+# Unnecessary lecture files
+mvc/*.pdf

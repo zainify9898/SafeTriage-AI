@@ -1,0 +1,37 @@
+MULTILINGUAL TRIAGE RESULTS
+  Language  Records  Accuracy  Macro-F1  Mean Confidence
+   English       50     0.360    0.1059           0.2603
+      Urdu       48     0.375    0.1091           0.2601
+Roman Urdu       48     0.375    0.1091           0.2606
+Code-Mixed       48     0.375    0.1091           0.2607
+
+UNCERTAINTY / HUMAN DEFERRAL
+ Threshold  AI Cases  Human Review  AI %  Human Review %  AI Accuracy
+       0.5         0            50   0.0           100.0          NaN
+       0.6         0            50   0.0           100.0          NaN
+       0.7         0            50   0.0           100.0          NaN
+       0.8         0            50   0.0           100.0          NaN
+       0.9         0            50   0.0           100.0          NaN
+
+XAI RESULTS
+ case                                           text  prediction  confidence      token  importance
+    1   nasal congestion and runny nose, onset today           3    0.260732    gestion    6.438219
+    1   nasal congestion and runny nose, onset today           3    0.260732        sal    5.808977
+    1   nasal congestion and runny nose, onset today           3    0.260732       ▁run    5.780885
+    1   nasal congestion and runny nose, onset today           3    0.260732       ▁ons    5.659890
+    1   nasal congestion and runny nose, onset today           3    0.260732       ▁nos    5.552078
+    1   nasal congestion and runny nose, onset today           3    0.260732         ny    5.549815
+    1   nasal congestion and runny nose, onset today           3    0.260732         et    5.471315
+    1   nasal congestion and runny nose, onset today           3    0.260732     ▁today    5.340611
+    1   nasal congestion and runny nose, onset today           3    0.260732          e    5.321590
+    1   nasal congestion and runny nose, onset today           3    0.260732          ,    5.235445
+    2 spreading wound infection，worsening over hours           3    0.259808    ▁spread    6.470692
+    2 spreading wound infection，worsening over hours           3    0.259808        wor    6.220727
+    2 spreading wound infection，worsening over hours           3    0.259808 ▁infection    6.185578
+    2 spreading wound infection，worsening over hours           3    0.259808        und    6.091423
+    2 spreading wound infection，worsening over hours           3    0.259808        ▁wo    5.987013
+    2 spreading wound infection，worsening over hours           3    0.259808       ning    5.649622
+    2 spreading wound infection，worsening over hours           3    0.259808     ▁hours    5.636302
+    2 spreading wound infection，worsening over hours           3    0.259808      ▁over    5.600003
+    2 spreading wound infection，worsening over hours           3    0.259808         se    5.410387
+    2 spreading wound infection，worsening over hours           3    0.259808        ing    5.288088

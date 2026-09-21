@@ -1,0 +1,2 @@
+model,samples,train_samples,test_samples,epochs,accuracy,macro_f1
+XLM-R,8000,6400,1600,1,0.7475,0.5523381346886305
