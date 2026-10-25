@@ -2,16 +2,15 @@ import streamlit as st
 import torch
 import pandas as pd
 import os
-import re
+from pathlib import Path
+
+from src.safetriage_utils import detect_language, predict_triage, explain_text_perturbation
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from langdetect import detect, DetectorFactory
 
 # ============================================================
 # CONFIGURATION
 # ============================================================
-
-DetectorFactory.seed = 0
 
 MODEL_PATH = "models/xlmr_full"
 
@@ -78,148 +77,24 @@ st.markdown(
 
 
 # ============================================================
-# LANGUAGE DETECTION
-# ============================================================
-
-def detect_language(text):
-
-    text_lower = text.lower()
-
-    # --------------------------------------------------------
-    # Urdu script detection
-    # --------------------------------------------------------
-
-    urdu_script = any(
-        "\u0600" <= char <= "\u06ff"
-        for char in text
-    )
-
-    # --------------------------------------------------------
-    # Roman Urdu vocabulary
-    # --------------------------------------------------------
-
-    roman_urdu_words = {
-        "hai", "hain", "ho", "hona", "hota",
-        "hoti", "hoon", "hun",
-        "mein", "main", "mera", "meri",
-        "mere", "mujhe", "mujhy",
-        "aap", "ap", "apka", "apki",
-        "apke", "ka", "ki", "ke",
-        "ko", "se", "sy",
-        "aur", "ya", "ye", "yeh",
-        "woh", "wo",
-        "raha", "rahi", "rahe",
-        "hua", "hui", "hue",
-        "shuru", "band", "dard",
-        "kya", "kyun", "kyu",
-        "nahi", "nahin",
-        "bohat", "bahut",
-        "acha", "achha",
-        "sath", "saath",
-        "andar", "bahar",
-        "aaj", "kal",
-        "subha", "shaam", "raat",
-        "din", "ghanta",
-        "ghante", "ghanton",
-        "thora", "zyada",
-        "wala", "wali", "wale",
-        "laga", "lagi",
-        "kr", "kar", "karo",
-        "krna", "hy", "he"
-    }
-
-    # --------------------------------------------------------
-    # English vocabulary
-    # --------------------------------------------------------
-
-    english_words = {
-        "the", "and", "is", "are",
-        "was", "were", "has", "have",
-        "had", "pain", "nose",
-        "runny", "fever", "headache",
-        "cough", "chest", "breathing",
-        "infection", "today",
-        "yesterday", "tomorrow",
-        "hours", "hour", "days",
-        "day", "blood", "pressure",
-        "vomiting", "vomit",
-        "nausea", "heart",
-        "stomach", "wound",
-        "injury", "swelling",
-        "severe", "mild",
-        "moderate", "acute",
-        "symptoms", "symptom",
-        "started", "starting",
-        "with", "without",
-        "from", "to", "in", "on"
-    }
-
-    words = set(
-        re.findall(
-            r"[a-zA-Z]+",
-            text_lower
-        )
-    )
-
-    roman_count = len(
-        words.intersection(
-            roman_urdu_words
-        )
-    )
-
-    english_count = len(
-        words.intersection(
-            english_words
-        )
-    )
-
-    # Urdu
-    if urdu_script:
-
-        if english_count > 0:
-
-            return "Code-Mixed"
-
-        return "Urdu"
-
-    # Roman Urdu + English
-    if roman_count >= 2 and english_count >= 1:
-
-        return "Code-Mixed"
-
-    # Roman Urdu
-    if roman_count >= 2:
-
-        return "Roman Urdu"
-
-    # English
-    if english_count >= 2:
-
-        return "English"
-
-    # Fallback
-    try:
-
-        detected = detect(text)
-
-        if detected == "en":
-            return "English"
-
-        if detected == "ur":
-            return "Urdu"
-
-    except Exception:
-        pass
-
-    return "Unknown"
-
-
-# ============================================================
 # MODEL LOADING
 # ============================================================
 
 @st.cache_resource
 def load_model():
+
+    weights_file = Path(MODEL_PATH) / "model.safetensors"
+    if weights_file.exists() and weights_file.stat().st_size < 1024:
+        try:
+            header = weights_file.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            header = ""
+        if header.startswith("version https://git-lfs.github.com/spec/v1"):
+            raise RuntimeError(
+                "Model weights are a Git LFS pointer, not the actual weights. "
+                "Install Git LFS and run 'git lfs pull' in the repository, "
+                "or place the complete model.safetensors file in models/xlmr_full."
+            )
 
     tokenizer = AutoTokenizer.from_pretrained(
         MODEL_PATH
@@ -254,90 +129,6 @@ def load_pilot_data():
     except Exception:
 
         return None
-
-
-# ============================================================
-# PREDICTION FUNCTION
-# ============================================================
-
-def predict_triage(
-    text,
-    tokenizer,
-    model
-):
-
-    inputs = tokenizer(
-        text,
-        return_tensors="pt",
-        truncation=True,
-        padding=True,
-        max_length=MAX_LENGTH
-    )
-
-    with torch.no_grad():
-
-        outputs = model(**inputs)
-
-    probabilities = torch.softmax(
-        outputs.logits,
-        dim=-1
-    )[0]
-
-    predicted_index = torch.argmax(
-        probabilities
-    ).item()
-
-    confidence = probabilities[
-        predicted_index
-    ].item()
-
-    # --------------------------------------------------------
-    # Label mapping
-    # --------------------------------------------------------
-
-    id2label = model.config.id2label
-
-    label = id2label.get(
-        predicted_index,
-        str(predicted_index + 1)
-    )
-
-    if label.startswith("LABEL_"):
-
-        try:
-
-            triage_level = (
-                int(
-                    label.replace(
-                        "LABEL_",
-                        ""
-                    )
-                ) + 1
-            )
-
-        except Exception:
-
-            triage_level = (
-                predicted_index + 1
-            )
-
-    else:
-
-        try:
-
-            triage_level = int(label)
-
-        except Exception:
-
-            triage_level = (
-                predicted_index + 1
-            )
-
-    return (
-        triage_level,
-        confidence,
-        probabilities
-    )
 
 
 # ============================================================
@@ -673,17 +464,27 @@ with tab1:
                 "🔎 Explainability Note"
             )
 
-            st.info(
-                "The model prediction is based on patterns "
-                "learned from the training data. Token-level "
-                "attribution was evaluated separately in the "
-                "research pipeline."
-            )
+            with st.spinner("Running local word-perturbation analysis..."):
+                explanation = explain_text_perturbation(
+                    message, tokenizer, model, top_n=10
+                )
 
-            st.caption(
-                "An attribution signal should not be interpreted "
-                "as proof that a specific word caused the prediction."
-            )
+            if explanation:
+                st.caption(
+                    "Local sensitivity analysis: each word is removed in turn "
+                    "and the change in the original predicted class probability is measured."
+                )
+                st.dataframe(
+                    pd.DataFrame(explanation),
+                    use_container_width=True,
+                    hide_index=True
+                )
+                st.info(
+                    "These are exploratory perturbation signals, not causal explanations "
+                    "and not evidence that a word clinically caused a triage level."
+                )
+            else:
+                st.info("No word-level perturbation result was available for this input.")
 
 
 # ============================================================
@@ -759,142 +560,145 @@ with tab2:
 
     if compare_button:
 
-        texts = {
-
-            "English": english,
-
-            "Urdu": urdu,
-
-            "Roman Urdu": roman_urdu,
-
-            "Code-Mixed": code_mixed
-        }
-
-        results = []
-
-        for language, text in texts.items():
-
-            if not text.strip():
-
-                continue
-
-            (
-                level,
-                confidence,
-                probabilities
-            ) = predict_triage(
-                text,
-                tokenizer,
-                model
-            )
-
-            results.append(
-                {
-                    "Language": language,
-
-                    "Triage Level": level,
-
-                    "Confidence (%)": round(
-                        confidence * 100,
-                        2
-                    ),
-
-                    "Human Review":
-                        "Yes"
-                        if confidence < CONFIDENCE_THRESHOLD
-                        else "No"
-                }
-            )
-
-        if results:
-
-            results_df = pd.DataFrame(
-                results
-            )
-
-            st.subheader(
-                "📊 Comparison Results"
-            )
-
-            st.dataframe(
-                results_df,
-                use_container_width=True,
-                hide_index=True
-            )
-
-            # ------------------------------------------------
-            # Confidence chart
-            # ------------------------------------------------
-
-            st.subheader(
-                "📈 Confidence by Language"
-            )
-
-            confidence_chart = (
-                results_df[
-                    [
-                        "Language",
-                        "Confidence (%)"
-                    ]
-                ]
-                .set_index("Language")
-            )
-
-            st.bar_chart(
-                confidence_chart
-            )
-
-            # ------------------------------------------------
-            # Triage chart
-            # ------------------------------------------------
-
-            st.subheader(
-                "🏷️ Triage Level by Language"
-            )
-
-            triage_chart = (
-                results_df[
-                    [
-                        "Language",
-                        "Triage Level"
-                    ]
-                ]
-                .set_index("Language")
-            )
-
-            st.bar_chart(
-                triage_chart
-            )
-
-            # ------------------------------------------------
-            # Download
-            # ------------------------------------------------
-
-            csv_data = results_df.to_csv(
-                index=False
-            )
-
-            st.download_button(
-                "📥 Download Comparison CSV",
-                data=csv_data,
-                file_name="four_language_comparison.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-
-            st.info(
-                "This comparison is descriptive and "
-                "research-oriented. Differences between "
-                "languages should not be interpreted as "
-                "clinical superiority."
-            )
-
+        if not model_loaded:
+            st.error("The model is unavailable. Resolve the model-loading error shown above before comparing languages.")
         else:
-
-            st.warning(
-                "Enter at least one language version."
-            )
-
+            texts = {
+    
+                "English": english,
+    
+                "Urdu": urdu,
+    
+                "Roman Urdu": roman_urdu,
+    
+                "Code-Mixed": code_mixed
+            }
+    
+            results = []
+    
+            for language, text in texts.items():
+    
+                if not text.strip():
+    
+                    continue
+    
+                (
+                    level,
+                    confidence,
+                    probabilities
+                ) = predict_triage(
+                    text,
+                    tokenizer,
+                    model
+                )
+    
+                results.append(
+                    {
+                        "Language": language,
+    
+                        "Triage Level": level,
+    
+                        "Confidence (%)": round(
+                            confidence * 100,
+                            2
+                        ),
+    
+                        "Human Review":
+                            "Yes"
+                            if confidence < CONFIDENCE_THRESHOLD
+                            else "No"
+                    }
+                )
+    
+            if results:
+    
+                results_df = pd.DataFrame(
+                    results
+                )
+    
+                st.subheader(
+                    "📊 Comparison Results"
+                )
+    
+                st.dataframe(
+                    results_df,
+                    use_container_width=True,
+                    hide_index=True
+                )
+    
+                # ------------------------------------------------
+                # Confidence chart
+                # ------------------------------------------------
+    
+                st.subheader(
+                    "📈 Confidence by Language"
+                )
+    
+                confidence_chart = (
+                    results_df[
+                        [
+                            "Language",
+                            "Confidence (%)"
+                        ]
+                    ]
+                    .set_index("Language")
+                )
+    
+                st.bar_chart(
+                    confidence_chart
+                )
+    
+                # ------------------------------------------------
+                # Triage chart
+                # ------------------------------------------------
+    
+                st.subheader(
+                    "🏷️ Triage Level by Language"
+                )
+    
+                triage_chart = (
+                    results_df[
+                        [
+                            "Language",
+                            "Triage Level"
+                        ]
+                    ]
+                    .set_index("Language")
+                )
+    
+                st.bar_chart(
+                    triage_chart
+                )
+    
+                # ------------------------------------------------
+                # Download
+                # ------------------------------------------------
+    
+                csv_data = results_df.to_csv(
+                    index=False
+                )
+    
+                st.download_button(
+                    "📥 Download Comparison CSV",
+                    data=csv_data,
+                    file_name="four_language_comparison.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+    
+                st.info(
+                    "This comparison is descriptive and "
+                    "research-oriented. Differences between "
+                    "languages should not be interpreted as "
+                    "clinical superiority."
+                )
+    
+            else:
+    
+                st.warning(
+                    "Enter at least one language version."
+                )
+    
 
 # ============================================================
 # TAB 3 — PILOT CASES
@@ -911,205 +715,208 @@ with tab3:
         "already prepared for the research experiment."
     )
 
-    pilot_df = load_pilot_data()
-
-    if pilot_df is None:
-
-        st.warning(
-            "Pilot dataset not found at:"
-        )
-
-        st.code(
-            PILOT_DATA_PATH
-        )
-
+    if not model_loaded:
+        st.warning("Pilot inference is disabled because the model could not be loaded. Resolve the model-loading error shown above.")
     else:
-
-        st.success(
-            f"Pilot dataset loaded: "
-            f"{len(pilot_df)} records"
-        )
-
-        # ----------------------------------------------------
-        # Case selection
-        # ----------------------------------------------------
-
-        if "patient_id" in pilot_df.columns:
-
-            selected_id = st.selectbox(
-                "Select Pilot Case",
-                pilot_df["patient_id"].tolist()
+        pilot_df = load_pilot_data()
+    
+        if pilot_df is None:
+    
+            st.warning(
+                "Pilot dataset not found at:"
             )
-
-            selected_row = pilot_df[
-                pilot_df["patient_id"]
-                == selected_id
-            ].iloc[0]
-
+    
+            st.code(
+                PILOT_DATA_PATH
+            )
+    
         else:
-
-            selected_index = st.selectbox(
-                "Select Pilot Case",
-                range(len(pilot_df))
+    
+            st.success(
+                f"Pilot dataset loaded: "
+                f"{len(pilot_df)} records"
             )
-
-            selected_row = pilot_df.iloc[
-                selected_index
-            ]
-
-        # ----------------------------------------------------
-        # Show source case
-        # ----------------------------------------------------
-
-        st.subheader(
-            "📋 Selected Case"
-        )
-
-        if "chief_complaint_raw" in selected_row:
-
-            st.write(
-                "**Original English Complaint:**"
-            )
-
-            st.info(
-                str(
-                    selected_row[
-                        "chief_complaint_raw"
-                    ]
+    
+            # ----------------------------------------------------
+            # Case selection
+            # ----------------------------------------------------
+    
+            if "patient_id" in pilot_df.columns:
+    
+                selected_id = st.selectbox(
+                    "Select Pilot Case",
+                    pilot_df["patient_id"].tolist()
                 )
-            )
-
-        if "triage_acuity" in selected_row:
-
-            st.write(
-                f"**Actual Dataset Triage:** "
-                f"Level {selected_row['triage_acuity']}"
-            )
-
-        elif "triage_level" in selected_row:
-
-            st.write(
-                f"**Actual Dataset Triage:** "
-                f"Level {selected_row['triage_level']}"
-            )
-
-        # ----------------------------------------------------
-        # Evaluate available languages
-        # ----------------------------------------------------
-
-        pilot_languages = {
-
-            "English": "chief_complaint_raw",
-
-            "Urdu": "urdu_text",
-
-            "Roman Urdu": "roman_urdu_text",
-
-            "Code-Mixed": "code_mixed_text"
-        }
-
-        pilot_results = []
-
-        for language, column in pilot_languages.items():
-
-            if column not in pilot_df.columns:
-
-                continue
-
-            text = str(
-                selected_row[column]
-            )
-
-            if text == "nan" or not text.strip():
-
-                continue
-
-            (
-                predicted_level,
-                confidence,
-                probabilities
-            ) = predict_triage(
-                text,
-                tokenizer,
-                model
-            )
-
-            pilot_results.append(
-                {
-                    "Language": language,
-
-                    "Triage Level":
-                        predicted_level,
-
-                    "Confidence (%)":
-                        round(
-                            confidence * 100,
-                            2
-                        ),
-
-                    "Human Review":
-                        "Yes"
-                        if confidence < CONFIDENCE_THRESHOLD
-                        else "No"
-                }
-            )
-
-        if pilot_results:
-
-            pilot_results_df = pd.DataFrame(
-                pilot_results
-            )
-
+    
+                selected_row = pilot_df[
+                    pilot_df["patient_id"]
+                    == selected_id
+                ].iloc[0]
+    
+            else:
+    
+                selected_index = st.selectbox(
+                    "Select Pilot Case",
+                    range(len(pilot_df))
+                )
+    
+                selected_row = pilot_df.iloc[
+                    selected_index
+                ]
+    
+            # ----------------------------------------------------
+            # Show source case
+            # ----------------------------------------------------
+    
             st.subheader(
-                "🌐 Model Performance Across Languages"
+                "📋 Selected Case"
             )
-
-            st.dataframe(
-                pilot_results_df,
-                use_container_width=True,
-                hide_index=True
-            )
-
-            # ------------------------------------------------
-            # Show texts
-            # ------------------------------------------------
-
-            st.subheader(
-                "📝 Case Texts"
-            )
-
-            for language, column in pilot_languages.items():
-
-                if column in pilot_df.columns:
-
-                    value = str(
-                        selected_row[column]
+    
+            if "chief_complaint_raw" in selected_row:
+    
+                st.write(
+                    "**Original English Complaint:**"
+                )
+    
+                st.info(
+                    str(
+                        selected_row[
+                            "chief_complaint_raw"
+                        ]
                     )
-
-                    if value != "nan" and value.strip():
-
-                        with st.expander(
-                            f"{language} Version"
-                        ):
-
-                            st.write(value)
-
-            # ------------------------------------------------
-            # Download
-            # ------------------------------------------------
-
-            pilot_csv = pilot_results_df.to_csv(
-                index=False
-            )
-
-            st.download_button(
-                "📥 Download Pilot Case Result",
-                data=pilot_csv,
-                file_name="pilot_case_comparison.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-
+                )
+    
+            if "triage_acuity" in selected_row:
+    
+                st.write(
+                    f"**Actual Dataset Triage:** "
+                    f"Level {selected_row['triage_acuity']}"
+                )
+    
+            elif "triage_level" in selected_row:
+    
+                st.write(
+                    f"**Actual Dataset Triage:** "
+                    f"Level {selected_row['triage_level']}"
+                )
+    
+            # ----------------------------------------------------
+            # Evaluate available languages
+            # ----------------------------------------------------
+    
+            pilot_languages = {
+    
+                "English": "chief_complaint_raw",
+    
+                "Urdu": "urdu_text",
+    
+                "Roman Urdu": "roman_urdu_text",
+    
+                "Code-Mixed": "code_mixed_text"
+            }
+    
+            pilot_results = []
+    
+            for language, column in pilot_languages.items():
+    
+                if column not in pilot_df.columns:
+    
+                    continue
+    
+                text = str(
+                    selected_row[column]
+                )
+    
+                if text == "nan" or not text.strip():
+    
+                    continue
+    
+                (
+                    predicted_level,
+                    confidence,
+                    probabilities
+                ) = predict_triage(
+                    text,
+                    tokenizer,
+                    model
+                )
+    
+                pilot_results.append(
+                    {
+                        "Language": language,
+    
+                        "Triage Level":
+                            predicted_level,
+    
+                        "Confidence (%)":
+                            round(
+                                confidence * 100,
+                                2
+                            ),
+    
+                        "Human Review":
+                            "Yes"
+                            if confidence < CONFIDENCE_THRESHOLD
+                            else "No"
+                    }
+                )
+    
+            if pilot_results:
+    
+                pilot_results_df = pd.DataFrame(
+                    pilot_results
+                )
+    
+                st.subheader(
+                    "🌐 Model Performance Across Languages"
+                )
+    
+                st.dataframe(
+                    pilot_results_df,
+                    use_container_width=True,
+                    hide_index=True
+                )
+    
+                # ------------------------------------------------
+                # Show texts
+                # ------------------------------------------------
+    
+                st.subheader(
+                    "📝 Case Texts"
+                )
+    
+                for language, column in pilot_languages.items():
+    
+                    if column in pilot_df.columns:
+    
+                        value = str(
+                            selected_row[column]
+                        )
+    
+                        if value != "nan" and value.strip():
+    
+                            with st.expander(
+                                f"{language} Version"
+                            ):
+    
+                                st.write(value)
+    
+                # ------------------------------------------------
+                # Download
+                # ------------------------------------------------
+    
+                pilot_csv = pilot_results_df.to_csv(
+                    index=False
+                )
+    
+                st.download_button(
+                    "📥 Download Pilot Case Result",
+                    data=pilot_csv,
+                    file_name="pilot_case_comparison.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+    
 
 # ============================================================
 # TAB 4 — RESEARCH INFORMATION
