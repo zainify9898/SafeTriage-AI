@@ -1,6 +1,8 @@
 """Reusable SafeTriage-AI language and prediction utilities."""
 import re
 import torch
+
+MAX_LENGTH = 128
 from langdetect import detect, DetectorFactory
 
 DetectorFactory.seed = 0
