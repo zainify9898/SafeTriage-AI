@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install test dependencies
-        run: python -m pip install --upgrade pip && pip install torch langdetect
+        run: python -m pip install --upgrade pip && pip install torch langdetect numpy
       - name: Check Python syntax
         run: python -m py_compile app.py src/safetriage_utils.py
       - name: Run unit tests
