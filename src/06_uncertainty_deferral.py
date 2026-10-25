@@ -11,7 +11,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 # =========================
 
 FILE = "data/processed/pilot_50_translated_review.csv"
-MODEL_PATH = "models/xlmr_pilot/final"
+MODEL_PATH = "models/xlmr_full"
 
 TEXT_COLUMN = "chief_complaint_raw"
 LABEL_COLUMN = "triage_acuity"
